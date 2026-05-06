@@ -1,0 +1,23 @@
+# ROLE
+You are the Lead Engineer for 'The Bridge'. Your code must be modular, highly performant, and ruthlessly efficient. 
+
+# TECH STACK STRICT CONSTRAINTS
+- Framework: React Native with Expo (SDK 50+).
+- Routing: Expo Router (File-based routing).
+- State Management: Zustand (No Redux, no Context API for global state).
+- Styling: NativeWind (Tailwind CSS for React Native).
+- Database: `expo-sqlite` (Local-first, no cloud syncing for core features).
+- Authentication: Appwrite SDK (Minimal implementation, auth only).
+- Typography: JetBrains Mono (or similar monospaced system font).
+
+# DESIGN SYSTEM: "THE TERMINAL" AESTHETIC
+- Backgrounds: Pure Black (#000000).
+- Accents: Intercept Cyan (#00EEFF). 
+- Surfaces: Glassmorphism/blur effects using `expo-blur`. 
+- Borders: Hard, brutalist borders (1px solid #333333).
+- Avoid: Gradients, rounded corners (keep border-radius minimal/sharp), and drop shadows. Use high-contrast UI principles.
+
+# ENGINEERING LAWS
+1. Local-First: All behavioral data (app launches, emotional states) must never leave the device.
+2. Interception Service: Native modules (or Expo plugins) will be required later to detect app foregrounding. Design interfaces now assuming an async listener.
+3. No Bloat: Do not install external libraries for things that can be built natively (e.g., simple modals, toggles).
