@@ -1,77 +1,114 @@
-import React, { useMemo } from 'react';
-import { View, Dimensions } from 'react-native';
-import Svg, { Circle, Line, G } from 'react-native-svg';
-import { Stack } from 'expo-router';
-import { TerminalText } from '../src/ui/components/TerminalText';
-import { GlassCard } from '../src/ui/components/GlassCard';
+import React from 'react';
+import { View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { MotiView } from 'moti';
 
-export default function DashboardScreen() {
-  const { width } = Dimensions.get('window');
-  const height = 300;
+// Core State
+import { useAppStore } from '@/core/store/useAppStore';
 
-  // Generative constellation algorithm
-  const stars = useMemo(() => {
-    const points = [];
-    for (let i = 0; i < 12; i++) {
-      points.push({
-        x: Math.random() * (width - 60) + 30,
-        y: Math.random() * (height - 60) + 30,
-        r: Math.random() * 2 + 1,
-      });
-    }
-    return points;
-  }, [width]);
+// UI Components
+import {TerminalText} from '@/ui/components/TerminalText';
+import {GlassCard} from '@/ui/components/GlassCard';
+import {NeonButton} from '@/ui/components/NeonButton';
+
+// Emotion token mapping mapped strictly to tailwind.config.js laws
+const EMOTION_TOKENS: Record<string, string> = {
+  Boredom: '#00EEFF',     // Intercept Cyan
+  Anxiety: '#8A2BE2',     // Pulse Violet
+  Uncertainty: '#FF8C00', // Safety Orange
+  Fatigue: '#8FBC8F',     // Muted Moss
+  Fallback: '#FFFFFF',    // Failsafe White
+};
+
+export default function Dashboard() {
+  const router = useRouter();
+  
+  // Zustand State Consumption
+  const { activeEmotion, setActiveEmotion } = useAppStore();
+
+  // Failsafe state extraction
+  const emotion = activeEmotion || 'UNKNOWN';
+  const accentColor = EMOTION_TOKENS[emotion as keyof typeof EMOTION_TOKENS] || EMOTION_TOKENS.Fallback;
+
+  // Action Handler
+  const handleDisconnect = () => {
+    setActiveEmotion('', '');
+    // Replace prevents the user from swiping back to the dashboard.
+    // The session is dead. Return to base state.
+    router.replace('/'); 
+  };
 
   return (
-    <View className="flex-1 bg-obsidian pt-20 px-6">
-      <Stack.Screen options={{ headerShown: false }} />
+    <View className="flex-1 bg-[#0A0A0A] px-6 py-12 justify-between">
       
-      <TerminalText className="text-cyan-intercept text-3xl mb-8">
-        ASTRO-GRAPH
-      </TerminalText>
-
-      <GlassCard className="w-full p-4 mb-8">
-        <TerminalText className="text-white mb-4 text-sm">
-          Total Bridges: {stars.length}
+      {/* --- TOP SECTION: THE VALIDATION --- */}
+      <MotiView
+        from={{ opacity: 0, translateY: -10 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 800, delay: 200 }}
+        className="mt-8 border-b border-[#333333] pb-4"
+      >
+        <TerminalText 
+          style={{ color: accentColor }} 
+          className="text-xl uppercase font-bold tracking-[0.2em]"
+        >
+          [{emotion}] RECOGNIZED.
         </TerminalText>
-        <View className="w-full rounded-sm overflow-hidden border border-brutalist bg-black/50" style={{ height }}>
-          <Svg width="100%" height="100%">
-            {/* Draw Constellation Lines */}
-            <G opacity={0.3}>
-              {stars.map((star, i) => {
-                if (i === 0) return null;
-                const prev = stars[i - 1];
-                return (
-                  <Line
-                    key={`line-${i}`}
-                    x1={prev.x}
-                    y1={prev.y}
-                    x2={star.x}
-                    y2={star.y}
-                    stroke="#00EEFF"
-                    strokeWidth="1"
-                  />
-                );
-              })}
-            </G>
-            {/* Draw Stars */}
-            {stars.map((star, i) => (
-              <Circle
-                key={`star-${i}`}
-                cx={star.x}
-                cy={star.y}
-                r={star.r + 1}
-                fill="#00EEFF"
-                opacity={0.8}
-              />
-            ))}
-          </Svg>
-        </View>
-      </GlassCard>
+        <TerminalText className="text-[#E0E0E0] text-lg mt-2 tracking-wider">
+          AGENCY RECLAIMED.
+        </TerminalText>
+      </MotiView>
 
-      <TerminalText className="text-white/50 text-xs text-center">
-        Every star represents a moment you chose reality over the algorithm.
-      </TerminalText>
+      {/* --- MIDDLE SECTION: THE TIME VAULT --- */}
+      <MotiView
+        from={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ type: 'timing', duration: 1000, delay: 400 }}
+        className="items-center justify-center my-12"
+      >
+        <TerminalText 
+          className="text-5xl text-center font-bold text-white tracking-tighter" 
+          style={{ lineHeight: 56 }}
+        >
+          25 MINUTES
+        </TerminalText>
+        <TerminalText 
+          style={{ color: accentColor }} 
+          className="text-2xl text-center font-bold tracking-[0.2em] mt-2"
+        >
+          RECLAIMED
+        </TerminalText>
+      </MotiView>
+
+      {/* --- LOWER SECTION: THE MIRROR CARD --- */}
+      <View className="flex-1 justify-center mb-8">
+        <GlassCard className="p-6 border border-[#333333] rounded-none">
+          {/* 
+            TODO (BACKEND INJECTION): 
+            Replace this hardcoded string with dynamic context derived from local-first 
+            `BridgeLogs` table combined with local AI rule grounding.
+            Query schema: SELECT grounding_quote FROM BridgeLogs WHERE emotionState = ?
+          */}
+          <TerminalText className="text-white text-center text-sm leading-7 tracking-wide">
+            "The algorithm demands your time. You chose to keep it."
+          </TerminalText>
+        </GlassCard>
+      </View>
+
+      {/* --- ACTION SECTION --- */}
+      <MotiView
+        from={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ type: 'timing', duration: 600, delay: 800 }}
+      >
+        <NeonButton
+          label="DISCONNECT"
+          onPress={handleDisconnect}
+          emotionColor={accentColor}
+          className="mb-8 rounded-none border border-[#333333]"
+        />
+      </MotiView>
+      
     </View>
   );
 }

@@ -7,6 +7,12 @@ module.exports = function (api) {
     ],
     plugins: [
       require.resolve('react-native-reanimated/plugin'),
+      ['module-resolver', {
+        root: ['./'],
+        alias: {
+          '@': './src',
+        },
+      }],
     ],
   };
 };

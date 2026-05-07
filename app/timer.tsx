@@ -9,7 +9,7 @@ import { useAppStore } from '../src/core/store/useAppStore';
 export default function TimerScreen() {
   const router = useRouter();
   const { activeEmotion, activeEmotionColor } = useAppStore();
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(5);
 
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -25,7 +25,7 @@ export default function TimerScreen() {
   const radius = 100;
   const strokeWidth = 8;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (timeLeft / 60) * circumference;
+  const strokeDashoffset = circumference - (timeLeft / 5) * circumference;
 
   return (
     <View className="flex-1 bg-obsidian justify-center items-center">
