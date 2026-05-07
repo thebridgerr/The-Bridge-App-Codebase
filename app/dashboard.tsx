@@ -1,43 +1,69 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MotiView } from 'moti';
 
-// Core State
+// Core & Data Layer
 import { useAppStore } from '@/core/store/useAppStore';
+import { dbManager } from '@/core/database/DatabaseManager';
 
 // UI Components
 import {TerminalText} from '@/ui/components/TerminalText';
 import {GlassCard} from '@/ui/components/GlassCard';
 import {NeonButton} from '@/ui/components/NeonButton';
 
-// Emotion token mapping mapped strictly to tailwind.config.js laws
-const EMOTION_TOKENS: Record<string, string> = {
-  Boredom: '#00EEFF',     // Intercept Cyan
-  Anxiety: '#8A2BE2',     // Pulse Violet
-  Uncertainty: '#FF8C00', // Safety Orange
-  Fatigue: '#8FBC8F',     // Muted Moss
-  Fallback: '#FFFFFF',    // Failsafe White
-};
-
 export default function Dashboard() {
   const router = useRouter();
   
-  // Zustand State Consumption
-  const { activeEmotion, setActiveEmotion } = useAppStore();
+  // State Extraction
+  const { activeEmotion, activeEmotionColor, resetSession } = useAppStore();
 
-  // Failsafe state extraction
-  const emotion = activeEmotion || 'UNKNOWN';
-  const accentColor = EMOTION_TOKENS[emotion as keyof typeof EMOTION_TOKENS] || EMOTION_TOKENS.Fallback;
+  // Local State
+  const [affirmation, setAffirmation] = useState<string>('');
+  const [isReady, setIsReady] = useState(false);
 
-  // Action Handler
+  // Failsafe mappings
+  const emotion = activeEmotion || 'Boredom';
+  const accentColor = activeEmotionColor || '#FFFFFF';
+
+  // --- FETCH DYNAMIC AFFIRMATION ---
+  useEffect(() => {
+    const fetchAffirmation = async () => {
+      try {
+        const query = 'SELECT content FROM Affirmations WHERE category = ?';
+        const results = await dbManager.executeSql(query, [emotion]);
+
+        if (results && results.length > 0) {
+          const randomIndex = Math.floor(Math.random() * results.length);
+          setAffirmation(results[randomIndex].content);
+        } else {
+          // Fallback if DB fetch fails
+          setAffirmation('The algorithm demands your time. You chose to keep it.');
+        }
+      } catch (error) {
+        console.error('[DB_ERR] Failed to fetch affirmation:', error);
+        setAffirmation('Connection severed. Reality engaged.');
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    fetchAffirmation();
+  }, [emotion]);
+
+  // --- ACTION HANDLER ---
   const handleDisconnect = () => {
-    setActiveEmotion('', '');
-    // Replace prevents the user from swiping back to the dashboard.
-    // The session is dead. Return to base state.
+    resetSession();
+    // Destroy stack to prevent backward swipe into old session
     router.replace('/'); 
   };
 
+  // --- LOADING GUARD ---
+  if (!isReady) {
+    return <View className="flex-1 bg-[#0A0A0A]" />;
+  }
+
+  // --- MAIN RENDER ---
   return (
     <View className="flex-1 bg-[#0A0A0A] px-6 py-12 justify-between">
       
@@ -81,25 +107,24 @@ export default function Dashboard() {
       </MotiView>
 
       {/* --- LOWER SECTION: THE MIRROR CARD --- */}
-      <View className="flex-1 justify-center mb-8">
+      <MotiView
+        from={{ opacity: 0, translateY: 20 }}
+        animate={{ opacity: 1, translateY: 0 }}
+        transition={{ type: 'timing', duration: 800, delay: 600 }}
+        className="flex-1 justify-center mb-8"
+      >
         <GlassCard className="p-6 border border-[#333333] rounded-none">
-          {/* 
-            TODO (BACKEND INJECTION): 
-            Replace this hardcoded string with dynamic context derived from local-first 
-            `BridgeLogs` table combined with local AI rule grounding.
-            Query schema: SELECT grounding_quote FROM BridgeLogs WHERE emotionState = ?
-          */}
-          <TerminalText className="text-white text-center text-sm leading-7 tracking-wide">
-            "The algorithm demands your time. You chose to keep it."
+          <TerminalText className="text-white text-center text-sm leading-8 tracking-wider uppercase font-bold">
+            "{affirmation}"
           </TerminalText>
         </GlassCard>
-      </View>
+      </MotiView>
 
       {/* --- ACTION SECTION --- */}
       <MotiView
         from={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ type: 'timing', duration: 600, delay: 800 }}
+        transition={{ type: 'timing', duration: 600, delay: 900 }}
       >
         <NeonButton
           label="DISCONNECT"
